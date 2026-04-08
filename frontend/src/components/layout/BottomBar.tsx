@@ -9,7 +9,8 @@ export const BottomBar: React.FC = () => {
   const job = useForensicStore((state) => state.job);
 
   return (
-    <div className="absolute bottom-0 left-80 right-[400px] h-14 bg-spectre-bg border-t border-spectre-border backdrop-blur-md flex items-center justify-between px-6 z-30">
+    <div className="absolute inset-x-0 bottom-0 z-30 min-h-14 border-t border-spectre-border bg-spectre-bg/95 px-3 py-2 backdrop-blur-md md:px-6">
+      <div className="flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
       
       {/* Time & Processing Info */}
       <div className="flex items-center gap-4">
@@ -24,10 +25,10 @@ export const BottomBar: React.FC = () => {
       </div>
 
       {/* Primary Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex w-full flex-wrap items-center justify-end gap-3 md:w-auto md:gap-4">
         
         {/* Adversarial Toggle */}
-        <div className="flex items-center gap-2 border-r border-spectre-border pr-4">
+        <div className="flex items-center gap-2 border-r border-spectre-border pr-3 md:pr-4">
           <label className="text-xs font-heading font-medium text-spectre-textMuted cursor-pointer flex items-center gap-2">
             <ShieldAlert size={14} className={adversarialMode ? 'text-spectre-warning' : 'text-spectre-textDim'}/>
             Adversarial Test Mode
@@ -57,6 +58,7 @@ export const BottomBar: React.FC = () => {
           <FileText size={14} />
           Export Report
         </button>
+      </div>
       </div>
 
     </div>

@@ -13,12 +13,14 @@ export const ForensicPanel: React.FC = () => {
 
   if (!result) {
     return (
-      <aside className="w-[400px] h-full border-l border-spectre-border bg-spectre-bg p-6 flex flex-col items-center justify-center text-center">
+      <aside className="w-full shrink-0 border-t border-spectre-border bg-spectre-bg p-6 text-center lg:h-full lg:w-[400px] lg:border-l lg:border-t-0">
+        <div className="flex h-full min-h-[180px] flex-col items-center justify-center">
         <FileSearch size={48} className="text-spectre-borderLight mb-4" />
         <h3 className="font-heading text-lg font-medium text-spectre-textMuted mb-2">Analysis Pending</h3>
         <p className="text-sm text-spectre-textDim max-w-[250px]">
           Upload a document to view forensic findings, heatmaps, and tamper timeline.
         </p>
+        </div>
       </aside>
     );
   }
@@ -31,7 +33,7 @@ export const ForensicPanel: React.FC = () => {
   });
 
   return (
-    <aside className="w-[400px] h-full border-l border-spectre-border bg-spectre-bg p-6 pb-24 overflow-y-auto custom-scrollbar relative">
+    <aside className="relative max-h-[44vh] w-full shrink-0 overflow-y-auto border-t border-spectre-border bg-spectre-bg p-4 pb-24 lg:h-full lg:max-h-none lg:w-[400px] lg:border-l lg:border-t-0 lg:p-6">
       <VerdictBadge />
       
       <HeatmapThumbnail />

@@ -16,9 +16,16 @@ const typeColors: Record<string, string> = {
 interface BoundingBoxOverlayProps {
   width: number;
   height: number;
+  sourceWidth: number;
+  sourceHeight: number;
 }
 
-export const BoundingBoxOverlay: React.FC<BoundingBoxOverlayProps> = ({ width, height }) => {
+export const BoundingBoxOverlay: React.FC<BoundingBoxOverlayProps> = ({
+  width,
+  height,
+  sourceWidth,
+  sourceHeight,
+}) => {
   const result = useForensicStore((state) => state.result);
   const selectedFindingId = useForensicStore((state) => state.selectedFindingId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,11 +38,18 @@ export const BoundingBoxOverlay: React.FC<BoundingBoxOverlayProps> = ({ width, h
 
     ctx.clearRect(0, 0, width, height);
 
+    const scaleX = width / sourceWidth;
+    const scaleY = height / sourceHeight;
+
     result.findings.forEach((finding) => {
       const color = typeColors[finding.type] || '#FFFFFF';
       const isSelected = selectedFindingId === finding.id;
       
       const { x, y, w, h } = finding.bbox;
+      const renderX = x * scaleX;
+      const renderY = y * scaleY;
+      const renderW = w * scaleX;
+      const renderH = h * scaleY;
 
       // Draw box
       ctx.strokeStyle = color;
@@ -48,18 +62,18 @@ export const BoundingBoxOverlay: React.FC<BoundingBoxOverlayProps> = ({ width, h
         ctx.shadowBlur = 0;
       }
 
-      ctx.strokeRect(x, y, w, h);
+      ctx.strokeRect(renderX, renderY, renderW, renderH);
 
       // Draw background fill if selected
       if (isSelected) {
         ctx.fillStyle = `${color}33`; // 20% opacity
-        ctx.fillRect(x, y, w, h);
+        ctx.fillRect(renderX, renderY, renderW, renderH);
       }
       
       // Reset shadow
       ctx.shadowBlur = 0;
     });
-  }, [result, selectedFindingId, width, height]);
+  }, [result, selectedFindingId, sourceHeight, sourceWidth, width, height]);
 
   if (!result) return null;
 

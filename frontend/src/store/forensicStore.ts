@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { AnalysisResult, DocumentDNA, TimelineStep, AnalysisJob, Domain } from '../types/forensic';
+import type { AnalysisResult, AnalysisJob, Domain } from '../types/forensic';
 import { mockMedicalResult } from '../mock/mockFindings';
 
 interface ForensicState {
@@ -55,12 +55,41 @@ export const useForensicStore = create<ForensicState>((set) => ({
   setAdversarialMode: (enabled) => set({ adversarialMode: enabled }),
 
   previewUrl: null,
-  setPreviewUrl: (url) => set({ previewUrl: url }),
+  setPreviewUrl: (url) => {
+    const previousUrl = useForensicStore.getState().previewUrl;
+    if (previousUrl && previousUrl !== url) {
+      window.URL.revokeObjectURL(previousUrl);
+    }
+    set({ previewUrl: url });
+  },
 
   simulateAnalysis: (file) => {
+    const isSupported = file.type === 'application/pdf' || file.type.startsWith('image/');
+    if (!isSupported) {
+      set({
+        result: null,
+        selectedFindingId: null,
+        job: {
+          id: 'job_' + Date.now(),
+          status: 'error',
+          filename: file.name,
+          domain: useForensicStore.getState().selectedDomain,
+          progress: 0,
+          startTime: new Date(),
+          endTime: new Date(),
+        },
+      });
+      return;
+    }
+
     // Determine a fake job ID
     const jobId = 'job_' + Date.now();
     
+    const previousUrl = useForensicStore.getState().previewUrl;
+    if (previousUrl) {
+      window.URL.revokeObjectURL(previousUrl);
+    }
+
     // Create local object URL for preview
     const previewUrl = window.URL.createObjectURL(file);
     set({ previewUrl });

@@ -5,7 +5,6 @@ import { Fingerprint, ScanEye, RotateCw } from 'lucide-react';
 import { useForensicStore } from '../../store/forensicStore';
 
 export const Sidebar: React.FC = () => {
-  const result = useForensicStore((state) => state.result);
   const simulateAnalysis = useForensicStore((state) => state.simulateAnalysis);
   
   // Create a fake file for demo re-analysis
@@ -15,8 +14,8 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-80 h-full border-r border-spectre-border bg-spectre-bg p-6 flex flex-col pt-8">
-      <div className="flex items-center gap-3 mb-10">
+    <aside className="w-full shrink-0 border-b border-spectre-border bg-spectre-bg p-4 pt-5 lg:h-full lg:w-80 lg:border-b-0 lg:border-r lg:p-6 lg:pt-8">
+      <div className="mb-6 flex items-center gap-3 lg:mb-10">
         <ScanEye size={32} className="text-spectre-accent animate-pulse-glow" />
         <div>
           <h1 className="font-heading font-bold text-2xl tracking-wide glow-text">SPECTRE</h1>
@@ -24,7 +23,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2">
+      <div className="max-h-[34vh] overflow-y-auto pr-1 lg:max-h-none lg:pr-2">
         <DropZone />
         <DomainSelector />
 

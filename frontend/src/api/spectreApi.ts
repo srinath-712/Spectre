@@ -1,11 +1,6 @@
-import axios from 'axios';
-import type { AnalysisJob, AnalysisResult, DocumentDNA } from '../types/forensic';
+import type { AnalysisResult, DocumentDNA } from '../types/forensic';
 
 const API_BASE_URL = 'http://localhost:8000/api';
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-});
 
 export const spectreApi = {
   analyze: async (file: File, domain: string): Promise<{ jobId: string }> => {
@@ -22,12 +17,14 @@ export const spectreApi = {
   },
 
   getResult: async (jobId: string): Promise<AnalysisResult> => {
+    console.log('Fetching mock result from', API_BASE_URL, 'for job', jobId);
     // const response = await apiClient.get(`/result/${jobId}`);
     // return response.data;
     throw new Error('Not implemented. Using Zustand mock store for now.');
   },
 
   getFingerprint: async (file: File): Promise<DocumentDNA> => {
+    console.log('Generating mock fingerprint from', API_BASE_URL, 'for file', file.name);
     // const formData = new FormData();
     // formData.append('file', file);
     // const response = await apiClient.post('/fingerprint', formData);

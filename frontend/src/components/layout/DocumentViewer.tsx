@@ -4,31 +4,44 @@ import { BoundingBoxOverlay } from '../forensic/BoundingBoxOverlay';
 import { ScanAnimation } from '../shared/ScanAnimation';
 import { ImageIcon } from 'lucide-react';
 
+const BASE_DOCUMENT_WIDTH = 800;
+const BASE_DOCUMENT_HEIGHT = 1000;
+
 export const DocumentViewer: React.FC = () => {
   const previewUrl = useForensicStore((state) => state.previewUrl);
   const job = useForensicStore((state) => state.job);
   const result = useForensicStore((state) => state.result);
   const adversarialMode = useForensicStore((state) => state.adversarialMode);
-  
-  const containerRef = useRef<HTMLDivElement>(null);
+
+  const frameRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    if (containerRef.current) {
+    if (!frameRef.current) return;
+
+    const updateSize = () => {
+      if (!frameRef.current) return;
+      const rect = frameRef.current.getBoundingClientRect();
       setDimensions({
-        width: 800, // mock base width for bounding boxes
-        height: 1000 // mock base height
+        width: Math.max(1, Math.round(rect.width)),
+        height: Math.max(1, Math.round(rect.height)),
       });
-    }
+    };
+
+    updateSize();
+
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(frameRef.current);
+
+    return () => observer.disconnect();
   }, [previewUrl]);
 
   const isScanning = job !== null && job.status === 'processing';
+  const isPdf = Boolean(job?.filename.toLowerCase().endsWith('.pdf'));
 
   return (
-    <main className="flex-1 h-full bg-spectre-surface/50 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-      
-      {/* Background Grid */}
-      <div 
+    <main className="relative flex h-full flex-1 flex-col items-center justify-center overflow-hidden bg-spectre-surface/50 p-3 pb-20 md:p-6 md:pb-20 lg:p-8 lg:pb-20">
+      <div
         className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{ backgroundImage: 'radial-gradient(#00F5D4 1px, transparent 1px)', backgroundSize: '30px 30px' }}
       />
@@ -41,67 +54,33 @@ export const DocumentViewer: React.FC = () => {
       )}
 
       {previewUrl && (
-        <div 
-          ref={containerRef}
-          className={`relative bg-white rounded-sm shadow-card transition-all duration-500
-            ${adversarialMode ? 'hue-rotate-[15deg] contrast-125 saturate-50' : ''}
-          `}
-          style={{ width: '800px', height: '1000px', transform: 'scale(0.75)', transformOrigin: 'center center' }}
+        <div
+          ref={frameRef}
+          className={`relative overflow-hidden rounded-sm bg-white shadow-card transition-all duration-500 ${
+            adversarialMode ? 'hue-rotate-[15deg] contrast-125 saturate-50' : ''
+          }`}
+          style={{ width: 'min(100%, 850px)', aspectRatio: '4 / 5' }}
         >
-          {/* We use an image element for the mock, in reality this would be pdf.js canvas or image */}
-          <div className="absolute inset-0 bg-[#F5F7FA] overflow-hidden">
-            {/* Mock document content visualization */}
-            <div className="p-12 text-black/80 font-serif">
-              <h1 className="text-3xl font-bold mb-8 pb-4 border-b-2 border-black/20">MEDICAL DIAGNOSTIC REPORT</h1>
-              
-              <div className="grid grid-cols-2 gap-8 mb-12">
-                <div>
-                  <p className="font-bold mb-1 border-b border-black/10 inline-block">Patient Information</p>
-                  <p className="text-sm">Name: <span className="font-mono bg-yellow-100 px-1">JOHN DOE</span></p>
-                  <p className="text-sm">ID: 994-22-11A</p>
-                  <p className="text-sm">DOB: 12/04/1985</p>
-                </div>
-                <div>
-                  <p className="font-bold mb-1 border-b border-black/10 inline-block">Study Details</p>
-                  <p className="text-sm">Date: 04/08/2026</p>
-                  <p className="text-sm">Referring: Dr. Smith</p>
-                  <p className="text-sm">Ref No: R-773-A</p>
-                </div>
+          {isPdf ? (
+            <object data={previewUrl} type="application/pdf" className="h-full w-full">
+              <div className="flex h-full w-full items-center justify-center p-6 text-center text-sm text-slate-700">
+                PDF preview is not supported in this browser view. Use an image file for overlay validation.
               </div>
-
-              <div className="mb-12">
-                <p className="font-bold mb-2 border-b border-black/10 inline-block">Clinical Findings</p>
-                <p className="text-sm leading-relaxed mb-4">
-                  Examination of the thoracic region reveals no significant abnormalities. 
-                  Cardiac silhouette is within normal limits. 
-                </p>
-                <p className="text-sm leading-relaxed">
-                  Diagnosis Code: <span className="font-bold text-lg px-2 bg-red-50">C44.9</span>
-                </p>
-              </div>
-
-              <div className="absolute bottom-12 right-12 text-center">
-                <div className="font-signature text-2xl mb-2 text-blue-800 -rotate-3 border border-dashed border-red-400 p-2">Dr. Alan Smith, MD</div>
-                <div className="border-2 border-purple-800 text-purple-800 p-2 font-bold uppercase rounded-full rotate-12 inline-block opacity-80 backdrop-blur-sm shadow-lg">
-                  APPROVED<br/>
-                  <span className="text-[10px]">GENERAL HOSPITAL</span>
-                </div>
-                <p className="text-xs mt-4">Attending Physician</p>
-              </div>
-            </div>
-          </div>
-          
-          <img 
-            src={previewUrl} 
-            alt="Preview" 
-            className="absolute inset-0 w-full h-full object-contain opacity-0" // Hidden actual image for now
-          />
+            </object>
+          ) : (
+            <img src={previewUrl} alt="Uploaded preview" className="h-full w-full object-contain" />
+          )}
 
           <ScanAnimation isActive={isScanning} />
-          
-          {result && (
+
+          {result && dimensions.width > 0 && dimensions.height > 0 && (
             <div className="animate-fade-in">
-              <BoundingBoxOverlay width={dimensions.width} height={dimensions.height} />
+              <BoundingBoxOverlay
+                width={dimensions.width}
+                height={dimensions.height}
+                sourceWidth={BASE_DOCUMENT_WIDTH}
+                sourceHeight={BASE_DOCUMENT_HEIGHT}
+              />
             </div>
           )}
         </div>
