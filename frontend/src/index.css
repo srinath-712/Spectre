@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-spectre-bg text-spectre-text font-body antialiased;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-spectre-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-spectre-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-spectre-borderLight;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-spectre-card/80 backdrop-blur-xl border border-spectre-border rounded-lg;
+  }
+
+  .glass-panel-hover {
+    @apply glass-panel transition-all duration-300 hover:border-spectre-borderLight hover:shadow-glow;
+  }
+
+  .spectre-btn {
+    @apply px-4 py-2 rounded-lg font-heading font-medium text-sm transition-all duration-300
+           bg-spectre-accent/10 text-spectre-accent border border-spectre-accent/30
+           hover:bg-spectre-accent/20 hover:border-spectre-accent/60 hover:shadow-glow
+           active:scale-95;
+  }
+
+  .spectre-btn-primary {
+    @apply px-4 py-2 rounded-lg font-heading font-medium text-sm transition-all duration-300
+           bg-spectre-accent text-spectre-bg border border-spectre-accent
+           hover:bg-spectre-accentDim hover:shadow-glow-lg
+           active:scale-95;
+  }
+
+  .spectre-btn-danger {
+    @apply px-4 py-2 rounded-lg font-heading font-medium text-sm transition-all duration-300
+           bg-spectre-danger/10 text-spectre-danger border border-spectre-danger/30
+           hover:bg-spectre-danger/20 hover:border-spectre-danger/60
+           active:scale-95;
+  }
+
+  .spectre-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium
+           border backdrop-blur-sm;
+  }
+
+  .section-title {
+    @apply text-xs font-heading font-semibold uppercase tracking-widest text-spectre-textMuted;
+  }
+
+  .scan-line {
+    @apply absolute left-0 right-0 h-[2px] pointer-events-none z-50;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 245, 212, 0.1) 10%,
+      rgba(0, 245, 212, 0.8) 50%,
+      rgba(0, 245, 212, 0.1) 90%,
+      transparent 100%
+    );
+    box-shadow: 0 0 30px 10px rgba(0, 245, 212, 0.3),
+                0 0 60px 20px rgba(0, 245, 212, 0.1);
+  }
+
+  .upload-zone {
+    @apply relative border-2 border-dashed border-spectre-border rounded-xl
+           transition-all duration-300 cursor-pointer
+           hover:border-spectre-accent/50 hover:bg-spectre-accent/5;
+  }
+
+  .upload-zone.dragging {
+    @apply border-spectre-accent bg-spectre-accent/10 shadow-glow;
+  }
+
+  .finding-card {
+    @apply glass-panel p-3 transition-all duration-300 cursor-pointer
+           hover:border-spectre-borderLight hover:bg-spectre-card;
+  }
+
+  .finding-card.active {
+    @apply border-spectre-accent/50 bg-spectre-accent/5 shadow-glow;
+  }
+
+  .timeline-step {
+    @apply relative pl-6 pb-4 border-l-2 border-spectre-border last:border-l-0;
+  }
+
+  .timeline-step::before {
+    content: '';
+    @apply absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-spectre-accent;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-spectre-accent to-cyan-400;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, rgba(0, 245, 212, 0.5), rgba(0, 188, 212, 0.2)) 1;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+  }
+}
