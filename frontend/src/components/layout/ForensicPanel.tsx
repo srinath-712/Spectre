@@ -27,8 +27,10 @@ export const ForensicPanel: React.FC = () => {
 
   // Sort findings to bring selected one to top for better UX
   const sortedFindings = [...result.findings].sort((a, b) => {
-    if (a.id === selectedFindingId) return -1;
-    if (b.id === selectedFindingId) return 1;
+    const aId = a.id ?? a.regionId;
+    const bId = b.id ?? b.regionId;
+    if (aId === selectedFindingId) return -1;
+    if (bId === selectedFindingId) return 1;
     return b.confidence - a.confidence;
   });
 

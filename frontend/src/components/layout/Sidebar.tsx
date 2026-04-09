@@ -5,12 +5,12 @@ import { Fingerprint, ScanEye, RotateCw } from 'lucide-react';
 import { useForensicStore } from '../../store/forensicStore';
 
 export const Sidebar: React.FC = () => {
-  const simulateAnalysis = useForensicStore((state) => state.simulateAnalysis);
+  const analyzeFile = useForensicStore((state) => state.analyzeFile);
   
   // Create a fake file for demo re-analysis
   const handleReanalyze = () => {
     const fakeFile = new File([''], 'demo_document.pdf', { type: 'application/pdf' });
-    simulateAnalysis(fakeFile);
+    void analyzeFile(fakeFile);
   };
 
   return (

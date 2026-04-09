@@ -43,7 +43,7 @@ export const BoundingBoxOverlay: React.FC<BoundingBoxOverlayProps> = ({
 
     result.findings.forEach((finding) => {
       const color = typeColors[finding.type] || '#FFFFFF';
-      const isSelected = selectedFindingId === finding.id;
+      const isSelected = selectedFindingId === (finding.id ?? finding.regionId);
       
       const { x, y, w, h } = finding.bbox;
       const renderX = x * scaleX;

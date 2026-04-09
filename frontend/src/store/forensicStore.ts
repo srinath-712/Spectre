@@ -1,46 +1,47 @@
 import { create } from 'zustand';
-import type { AnalysisResult, AnalysisJob, Domain } from '../types/forensic';
-import { mockMedicalResult } from '../mock/mockFindings';
+import { spectreApi } from '../api/spectreApi';
+import type { AnalysisResult, AnalysisJob, Domain, Finding } from '../types/forensic';
 
 interface ForensicState {
-  // Current job
   job: AnalysisJob | null;
   setJob: (job: AnalysisJob | null) => void;
   updateJobProgress: (progress: number, status?: AnalysisJob['status']) => void;
 
-  // Selected domain
   selectedDomain: Domain;
   setSelectedDomain: (domain: Domain) => void;
 
-  // Analysis Result
   result: AnalysisResult | null;
   setResult: (result: AnalysisResult | null) => void;
 
-  // UI State
   selectedFindingId: string | null;
   setSelectedFindingId: (id: string | null) => void;
   adversarialMode: boolean;
-  setAdversarialMode: (enabled: boolean) => void;
+  setAdversarialMode: (enabled: boolean) => Promise<void>;
 
-  // Mock Action (simulating file upload)
-  simulateAnalysis: (file: File) => void;
-  
-  // App wide
   previewUrl: string | null;
   setPreviewUrl: (url: string | null) => void;
+
+  analyzeFile: (file: File) => Promise<void>;
+  exportReport: () => void;
 }
 
-export const useForensicStore = create<ForensicState>((set) => ({
+const pollIntervalMs = 900;
+const maxPollAttempts = 60;
+
+export const useForensicStore = create<ForensicState>((set, get) => ({
   job: null,
   setJob: (job) => set({ job }),
-  
-  updateJobProgress: (progress, status) => set((state) => ({
-    job: state.job ? { 
-      ...state.job, 
-      progress, 
-      status: status !== undefined ? status : state.job.status 
-    } : null
-  })),
+
+  updateJobProgress: (progress, status) =>
+    set((state) => ({
+      job: state.job
+        ? {
+            ...state.job,
+            progress,
+            status: status !== undefined ? status : state.job.status,
+          }
+        : null,
+    })),
 
   selectedDomain: 'medical',
   setSelectedDomain: (domain) => set({ selectedDomain: domain }),
@@ -52,18 +53,41 @@ export const useForensicStore = create<ForensicState>((set) => ({
   setSelectedFindingId: (id) => set({ selectedFindingId: id }),
 
   adversarialMode: false,
-  setAdversarialMode: (enabled) => set({ adversarialMode: enabled }),
+  setAdversarialMode: async (enabled) => {
+    set({ adversarialMode: enabled });
+
+    const { job, result } = get();
+    if (!enabled || !job || job.status !== 'completed' || !result) {
+      return;
+    }
+
+    try {
+      const attackedFindings = await spectreApi.runAdversarial(job.id, 'gaussian_noise');
+      set((state) =>
+        state.result
+          ? {
+              result: {
+                ...state.result,
+                findings: attackedFindings as Finding[],
+              },
+            }
+          : {}
+      );
+    } catch (error) {
+      console.error('Adversarial run failed', error);
+    }
+  },
 
   previewUrl: null,
   setPreviewUrl: (url) => {
-    const previousUrl = useForensicStore.getState().previewUrl;
+    const previousUrl = get().previewUrl;
     if (previousUrl && previousUrl !== url) {
       window.URL.revokeObjectURL(previousUrl);
     }
     set({ previewUrl: url });
   },
 
-  simulateAnalysis: (file) => {
+  analyzeFile: async (file) => {
     const isSupported = file.type === 'application/pdf' || file.type.startsWith('image/');
     if (!isSupported) {
       set({
@@ -73,7 +97,7 @@ export const useForensicStore = create<ForensicState>((set) => ({
           id: 'job_' + Date.now(),
           status: 'error',
           filename: file.name,
-          domain: useForensicStore.getState().selectedDomain,
+          domain: get().selectedDomain,
           progress: 0,
           startTime: new Date(),
           endTime: new Date(),
@@ -82,54 +106,106 @@ export const useForensicStore = create<ForensicState>((set) => ({
       return;
     }
 
-    // Determine a fake job ID
-    const jobId = 'job_' + Date.now();
-    
-    const previousUrl = useForensicStore.getState().previewUrl;
+    const previousUrl = get().previewUrl;
     if (previousUrl) {
       window.URL.revokeObjectURL(previousUrl);
     }
 
-    // Create local object URL for preview
     const previewUrl = window.URL.createObjectURL(file);
-    set({ previewUrl });
-    
     set({
+      previewUrl,
       result: null,
       selectedFindingId: null,
+      adversarialMode: false,
       job: {
-        id: jobId,
+        id: 'pending_' + Date.now(),
         status: 'uploading',
         filename: file.name,
-        domain: useForensicStore.getState().selectedDomain,
-        progress: 0,
-        startTime: new Date()
-      }
+        domain: get().selectedDomain,
+        progress: 5,
+        startTime: new Date(),
+      },
     });
 
-    // Simulate upload
-    setTimeout(() => {
+    try {
+      const analyzeResp = await spectreApi.analyze(file, get().selectedDomain);
       set((state) => ({
-        job: state.job ? { ...state.job, status: 'processing', progress: 20 } : null
+        job: state.job
+          ? {
+              ...state.job,
+              id: analyzeResp.jobId,
+              status: 'processing',
+              progress: 20,
+            }
+          : null,
       }));
 
-      // Simulate processing ticks
-      let progress = 20;
-      const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 15) + 5;
-        if (progress >= 100) {
-          clearInterval(interval);
-          set((state) => ({
-            job: state.job ? { ...state.job, status: 'completed', progress: 100, endTime: new Date() } : null,
-            result: mockMedicalResult // Populate mock findings
-          }));
-        } else {
-          set((state) => ({
-            job: state.job ? { ...state.job, progress } : null
-          }));
-        }
-      }, 500);
+      let attempt = 0;
+      let completed = false;
+      while (attempt < maxPollAttempts && !completed) {
+        attempt += 1;
+        const progress = Math.min(95, 20 + Math.floor((attempt / maxPollAttempts) * 70));
+        set((state) => ({
+          job: state.job
+            ? {
+                ...state.job,
+                status: 'processing',
+                progress,
+              }
+            : null,
+        }));
 
-    }, 1000);
-  }
+        const mapped = await spectreApi.getMappedResult(analyzeResp.jobId);
+        if (mapped) {
+          set((state) => ({
+            result: mapped,
+            job: state.job
+              ? {
+                  ...state.job,
+                  status: 'completed',
+                  progress: 100,
+                  endTime: new Date(),
+                }
+              : null,
+          }));
+          completed = true;
+          break;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+      }
+
+      if (!completed) {
+        set((state) => ({
+          job: state.job
+            ? {
+                ...state.job,
+                status: 'error',
+                endTime: new Date(),
+              }
+            : null,
+        }));
+      }
+    } catch (error) {
+      console.error('Analyze failed', error);
+      set((state) => ({
+        job: state.job
+          ? {
+              ...state.job,
+              status: 'error',
+              endTime: new Date(),
+            }
+          : null,
+      }));
+    }
+  },
+
+  exportReport: () => {
+    const job = get().job;
+    if (!job || job.status !== 'completed') {
+      return;
+    }
+    const url = spectreApi.reportUrl(job.id);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  },
 }));

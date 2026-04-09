@@ -8,7 +8,7 @@ export const DNAFingerprint: React.FC = () => {
   if (!result || !result.dna) return null;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(result.dna.hash);
+    void navigator.clipboard.writeText(result.dna.hash);
   };
 
   return (
@@ -20,6 +20,10 @@ export const DNAFingerprint: React.FC = () => {
       
       <div className="space-y-3">
         <div>
+          <span className="text-xs text-spectre-textMuted block mb-1">DNA ID</span>
+          <div className="text-xs font-mono text-spectre-text px-3 py-1.5 bg-spectre-surface rounded rounded-lg border border-spectre-border truncate mb-2">
+            {result.dna.id}
+          </div>
           <span className="text-xs text-spectre-textMuted block mb-1">Perceptual Hash Grid</span>
           <div className="flex items-center justify-between bg-spectre-surface px-3 py-2 rounded-lg border border-spectre-border">
             <code className="text-xs font-mono text-spectre-accent tracking-widest">{result.dna.hash}</code>

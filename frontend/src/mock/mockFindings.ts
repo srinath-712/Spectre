@@ -4,6 +4,7 @@ import type { AnalysisResult, Finding, TimelineStep } from '../types/forensic';
 const medicalFindings: Finding[] = [
   {
     id: 'f_001',
+    regionId: 'f_001',
     bbox: { x: 350, y: 150, w: 200, h: 40 },
     type: 'ai_edit',
     confidence: 0.98,
@@ -16,6 +17,7 @@ const medicalFindings: Finding[] = [
   },
   {
     id: 'f_002',
+    regionId: 'f_002',
     bbox: { x: 420, y: 550, w: 120, h: 30 },
     type: 'overwrite',
     confidence: 0.91,
@@ -28,6 +30,7 @@ const medicalFindings: Finding[] = [
   },
   {
     id: 'f_003',
+    regionId: 'f_003',
     bbox: { x: 100, y: 800, w: 250, h: 80 },
     type: 'copy_paste',
     confidence: 0.95,
@@ -40,6 +43,7 @@ const medicalFindings: Finding[] = [
   },
   {
     id: 'f_004',
+    regionId: 'f_004',
     bbox: { x: 600, y: 800, w: 150, h: 150 },
     type: 'added_content',
     confidence: 0.88,

@@ -23,14 +23,15 @@ interface FindingCardProps {
 export const FindingCard: React.FC<FindingCardProps> = ({ finding }) => {
   const selectedFindingId = useForensicStore((state) => state.selectedFindingId);
   const setSelectedFindingId = useForensicStore((state) => state.setSelectedFindingId);
+  const findingId = finding.id ?? finding.regionId;
 
-  const isActive = selectedFindingId === finding.id;
+  const isActive = selectedFindingId === findingId;
   const config = typeConfig[finding.type] || { label: finding.type, icon: <AlertCircle size={14} />, color: 'border-spectre-text text-spectre-text' };
 
   return (
     <div 
       className={`finding-card ${isActive ? 'active' : ''} mb-3`}
-      onClick={() => setSelectedFindingId(isActive ? null : finding.id)}
+      onClick={() => setSelectedFindingId(isActive ? null : findingId)}
     >
       <div className="flex justify-between items-start mb-2">
         <div className={`spectre-chip ${config.color} bg-opacity-10`}>

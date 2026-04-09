@@ -4,7 +4,7 @@ import { useForensicStore } from '../../store/forensicStore';
 
 export const DropZone: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
-  const simulateAnalysis = useForensicStore((state) => state.simulateAnalysis);
+  const analyzeFile = useForensicStore((state) => state.analyzeFile);
   const job = useForensicStore((state) => state.job);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -22,15 +22,15 @@ export const DropZone: React.FC = () => {
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      simulateAnalysis(e.dataTransfer.files[0]);
+      void analyzeFile(e.dataTransfer.files[0]);
     }
-  }, [simulateAnalysis]);
+  }, [analyzeFile]);
 
   const onFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      simulateAnalysis(e.target.files[0]);
+      void analyzeFile(e.target.files[0]);
     }
-  }, [simulateAnalysis]);
+  }, [analyzeFile]);
 
   if (job && job.status !== 'error') {
     return (

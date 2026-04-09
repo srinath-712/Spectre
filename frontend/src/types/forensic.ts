@@ -19,7 +19,8 @@ export type BoundingBox = {
 };
 
 export type Finding = {
-  id: string;
+  id?: string;
+  regionId: string;
   bbox: BoundingBox;
   type: TamperingType;
   confidence: number;

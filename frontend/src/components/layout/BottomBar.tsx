@@ -1,11 +1,13 @@
 import React from 'react';
 import { useForensicStore } from '../../store/forensicStore';
 import { FileText, ShieldAlert, Code2, Clock } from 'lucide-react';
+const BACKEND_DOCS_URL = (import.meta.env.VITE_BACKEND_DOCS_URL ?? 'http://localhost:8000/docs');
 
 export const BottomBar: React.FC = () => {
   const result = useForensicStore((state) => state.result);
   const adversarialMode = useForensicStore((state) => state.adversarialMode);
   const setAdversarialMode = useForensicStore((state) => state.setAdversarialMode);
+  const exportReport = useForensicStore((state) => state.exportReport);
   const job = useForensicStore((state) => state.job);
 
   return (
@@ -37,7 +39,9 @@ export const BottomBar: React.FC = () => {
                 type="checkbox" 
                 className="opacity-0 w-0 h-0" 
                 checked={adversarialMode}
-                onChange={(e) => setAdversarialMode(e.target.checked)}
+                onChange={(e) => {
+                  void setAdversarialMode(e.target.checked);
+                }}
                 disabled={!result}
               />
               <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${adversarialMode ? 'transform translate-x-4' : ''}`} />
@@ -46,7 +50,10 @@ export const BottomBar: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <button className="text-xs flex items-center gap-1.5 text-spectre-textMuted hover:text-spectre-text transition-colors">
+        <button
+          className="text-xs flex items-center gap-1.5 text-spectre-textMuted hover:text-spectre-text transition-colors"
+          onClick={() => window.open(BACKEND_DOCS_URL, '_blank', 'noopener,noreferrer')}
+        >
           <Code2 size={14} />
           API Docs
         </button>
@@ -54,6 +61,7 @@ export const BottomBar: React.FC = () => {
         <button 
           className={`spectre-btn-primary flex items-center gap-2 py-1.5 ${!result ? 'opacity-50 cursor-not-allowed saturate-0 pointer-events-none' : ''}`}
           disabled={!result}
+          onClick={exportReport}
         >
           <FileText size={14} />
           Export Report

@@ -50,6 +50,21 @@ export const HeatmapThumbnail: React.FC = () => {
 
   if (!result) return null;
 
+  if (result.heatmapUrl) {
+    return (
+      <div className="mb-6">
+        <h4 className="section-title mb-2">Forensic Heatmap</h4>
+        <div className="glass-panel p-2 flex justify-center bg-black/50">
+          <img
+            src={result.heatmapUrl}
+            alt="Forensic heatmap"
+            className="rounded border border-spectre-borderLight opacity-90 shadow-glow max-h-[240px] object-contain"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-6">
       <h4 className="section-title mb-2">Forensic Heatmap</h4>
