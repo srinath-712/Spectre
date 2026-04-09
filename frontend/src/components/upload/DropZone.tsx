@@ -6,6 +6,7 @@ export const DropZone: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const analyzeFile = useForensicStore((state) => state.analyzeFile);
   const job = useForensicStore((state) => state.job);
+  const resetAnalysis = useForensicStore((state) => state.resetAnalysis);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -33,8 +34,10 @@ export const DropZone: React.FC = () => {
   }, [analyzeFile]);
 
   if (job && job.status !== 'error') {
+    const canStartNew = job.status !== 'processing' && job.status !== 'uploading';
+
     return (
-      <div className="glass-panel p-4 flex items-center justify-between">
+      <div className="glass-panel p-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <FileType className="text-spectre-accent" size={24} />
           <div>
@@ -42,15 +45,32 @@ export const DropZone: React.FC = () => {
               {job.filename}
             </p>
             <p className="text-xs text-spectre-textMuted capitalize">
-              {job.status}...
+              {job.status === 'completed' ? 'Completed. Ready for next upload.' : `${job.status}...`}
             </p>
           </div>
         </div>
-        {job.status === 'processing' && (
-          <div className="text-right">
-            <span className="text-xs font-mono text-spectre-accent">{job.progress}%</span>
-          </div>
-        )}
+
+        <div className="flex items-center gap-3">
+          {job.status === 'processing' && (
+            <div className="text-right">
+              <span className="text-xs font-mono text-spectre-accent">{job.progress}%</span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className={`text-xs rounded-md border border-spectre-border px-2.5 py-1.5 transition-colors ${
+              canStartNew
+                ? 'text-spectre-text hover:bg-spectre-surface hover:border-spectre-textDim'
+                : 'text-spectre-textDim opacity-50 cursor-not-allowed'
+            }`}
+            onClick={resetAnalysis}
+            disabled={!canStartNew}
+            title={canStartNew ? 'Clear current analysis and upload a new file' : 'Wait until current analysis finishes'}
+          >
+            New Analysis
+          </button>
+        </div>
       </div>
     );
   }

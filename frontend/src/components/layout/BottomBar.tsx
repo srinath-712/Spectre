@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForensicStore } from '../../store/forensicStore';
-import { FileText, ShieldAlert, Code2, Clock } from 'lucide-react';
+import { FileText, ShieldAlert, Code2, Clock, RotateCcw } from 'lucide-react';
 const BACKEND_DOCS_URL = (import.meta.env.VITE_BACKEND_DOCS_URL ?? 'http://localhost:8000/docs');
 
 export const BottomBar: React.FC = () => {
@@ -8,7 +8,9 @@ export const BottomBar: React.FC = () => {
   const adversarialMode = useForensicStore((state) => state.adversarialMode);
   const setAdversarialMode = useForensicStore((state) => state.setAdversarialMode);
   const exportReport = useForensicStore((state) => state.exportReport);
+  const resetAnalysis = useForensicStore((state) => state.resetAnalysis);
   const job = useForensicStore((state) => state.job);
+  const canStartNew = !!job && job.status !== 'processing' && job.status !== 'uploading';
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-30 min-h-14 border-t border-spectre-border bg-spectre-bg/95 px-3 py-2 backdrop-blur-md md:px-6">
@@ -56,6 +58,20 @@ export const BottomBar: React.FC = () => {
         >
           <Code2 size={14} />
           API Docs
+        </button>
+
+        <button
+          className={`text-xs flex items-center gap-1.5 transition-colors ${
+            canStartNew
+              ? 'text-spectre-textMuted hover:text-spectre-text'
+              : 'text-spectre-textDim opacity-50 cursor-not-allowed'
+          }`}
+          disabled={!canStartNew}
+          onClick={resetAnalysis}
+          title={canStartNew ? 'Clear current analysis and upload another file' : 'Wait until analysis is finished'}
+        >
+          <RotateCcw size={14} />
+          New Analysis
         </button>
 
         <button 

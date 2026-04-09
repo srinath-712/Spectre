@@ -6,6 +6,7 @@ interface ForensicState {
   job: AnalysisJob | null;
   setJob: (job: AnalysisJob | null) => void;
   updateJobProgress: (progress: number, status?: AnalysisJob['status']) => void;
+  resetAnalysis: () => void;
 
   selectedDomain: Domain;
   setSelectedDomain: (domain: Domain) => void;
@@ -42,6 +43,16 @@ export const useForensicStore = create<ForensicState>((set, get) => ({
           }
         : null,
     })),
+
+  resetAnalysis: () => {
+    get().setPreviewUrl(null);
+    set({
+      job: null,
+      result: null,
+      selectedFindingId: null,
+      adversarialMode: false,
+    });
+  },
 
   selectedDomain: 'medical',
   setSelectedDomain: (domain) => set({ selectedDomain: domain }),
