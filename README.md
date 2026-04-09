@@ -10,6 +10,7 @@
 - [Technology Stack](#-technology-stack)
 - [Key Features](#-key-features)
 - [Getting Started](#-getting-started)
+- [Demo Runbook](#-demo-runbook)
 - [Roadmap](#-roadmap)
 
 ---
@@ -35,10 +36,10 @@ Spectre is designed to detect all 9 core categories of document tampering:
 | Layer | Technologies |
 |---|---|
 | **Frontend** | React, Vite, TailwindCSS, Zustand, Lucide Icons |
-| **Backend** | FastAPI, Uvicorn (Planned) |
+| **Backend** | FastAPI, Uvicorn |
 | **Forensics** | OpenCV, scikit-image, PyMuPDF, SciPy, Pillow |
 | **Analysis** | Tesseract OCR, NumPy, scikit-learn (SVM/Ensembles) |
-| **Reporting** | ReportLab (Planned) |
+| **Reporting** | ReportLab |
 
 ## ✨ Key Features
 ### 🖋️ Interactive Forensic Viewer
@@ -81,14 +82,26 @@ Reconstructs the chronological order of modifications based on ELA compression l
 
 The dashboard will be available at `http://localhost:5173`.
 
+### Backend startup
+```bash
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## 🎬 Demo Runbook
+Judge-mode demo and fallback operation steps are documented in:
+
+- `docs/PHASE5C_RUNBOOK.md`
+
 ---
 
 ## 🗺️ Roadmap
 - [x] **Phase 1:** UI Shell, Design System, & Interactive Mockups.
-- [ ] **Phase 2:** Backend Core Pipeline (FastAPI & Document Ingestion).
-- [ ] **Phase 3:** Implementation of all 9 Forensic Detection Modules.
-- [ ] **Phase 4:** Forensic PDF Report Export & DNA Fingerprinting logic.
-- [ ] **Phase 5:** Integration, QA, & Domain-Specific Tuning.
+- [x] **Phase 2:** Backend Core Pipeline (FastAPI & Document Ingestion).
+- [x] **Phase 3:** Implementation of all 9 Forensic Detection Modules.
+- [x] **Phase 4:** Forensic PDF Report Export & DNA Fingerprinting logic.
+- [x] **Phase 5A-5C:** Integration, QA, Domain-Specific Tuning, and Demo Polish.
+- [ ] **Phase 5D:** Freeze, tag release candidate, and final public URL validation.
 
 ---
 
