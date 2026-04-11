@@ -1,0 +1,122 @@
+[
+  {
+    "id": "copy_paste_009",
+    "type": "copy_paste",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\copy_paste_009.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\copy_paste_009.json"
+  },
+  {
+    "id": "copy_paste_001",
+    "type": "copy_paste",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\copy_paste_001.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\copy_paste_001.json"
+  },
+  {
+    "id": "overwrite_003",
+    "type": "overwrite",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\overwrite_003.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\overwrite_003.json"
+  },
+  {
+    "id": "overwrite_002",
+    "type": "overwrite",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\overwrite_002.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\overwrite_002.json"
+  },
+  {
+    "id": "added_content_003",
+    "type": "added_content",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\added_content_003.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\added_content_003.json"
+  },
+  {
+    "id": "added_content_001",
+    "type": "added_content",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\added_content_001.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\added_content_001.json"
+  },
+  {
+    "id": "erasure_004",
+    "type": "erasure",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\erasure_004.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\erasure_004.json"
+  },
+  {
+    "id": "erasure_002",
+    "type": "erasure",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\erasure_002.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\erasure_002.json"
+  },
+  {
+    "id": "merged_007",
+    "type": "merged",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\merged_007.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\merged_007.json"
+  },
+  {
+    "id": "merged_001",
+    "type": "merged",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\merged_001.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\merged_001.json"
+  },
+  {
+    "id": "watermark_001",
+    "type": "watermark",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\watermark_001.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\watermark_001.json"
+  },
+  {
+    "id": "watermark_009",
+    "type": "watermark",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\watermark_009.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\watermark_009.json"
+  },
+  {
+    "id": "spacing_001",
+    "type": "spacing",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\spacing_001.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\spacing_001.json"
+  },
+  {
+    "id": "spacing_008",
+    "type": "spacing",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\spacing_008.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\spacing_008.json"
+  },
+  {
+    "id": "ai_generated_005",
+    "type": "ai_generated",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\ai_generated_005.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\ai_generated_005.json"
+  },
+  {
+    "id": "ai_generated_003",
+    "type": "ai_generated",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\ai_generated_003.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\ai_generated_003.json"
+  },
+  {
+    "id": "ai_edit_003",
+    "type": "ai_edit",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\ai_edit_003.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\ai_edit_003.json"
+  },
+  {
+    "id": "ai_edit_000",
+    "type": "ai_edit",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\ai_edit_000.png",
+    "label_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\labels\\ai_edit_000.json"
+  },
+  {
+    "id": "authentic_002",
+    "type": "authentic",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\authentic_002.png",
+    "label_path": null
+  },
+  {
+    "id": "authentic_008",
+    "type": "authentic",
+    "image_path": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\data\\synthetic\\images\\authentic_008.png",
+    "label_path": null
+  }
+]

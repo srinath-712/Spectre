@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "features_expected": [
+    "copy_paste_max_corr",
+    "overwrite_std_ratio",
+    "added_content_var_ratio",
+    "erasure_smoothness_gain",
+    "merged_contrast_delta",
+    "watermark_peak_ratio",
+    "spacing_outlier_score",
+    "ai_generated_ratio",
+    "ai_edit_local_var_ratio"
+  ],
+  "splits": {
+    "train": 70,
+    "val": 10,
+    "test": 20
+  },
+  "scoring_protocol": {
+    "primary_metric": "f1_score",
+    "secondary_metrics": [
+      "precision",
+      "recall",
+      "auc_roc"
+    ],
+    "threshold": 0.5
+  }
+}
