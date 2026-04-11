@@ -103,6 +103,8 @@ class CopyPasteDetector(BaseDetector):
                     best_xy = (x2, y2)
 
         corr = best_corr
+        context.shared_features["copy_paste_max_corr"] = corr
+        
         confidence = _safe_confidence(0.38 + max(0.0, corr) * 0.58)
         if confidence < 0.56:
             return []
@@ -138,6 +140,8 @@ class OverwriteDetector(BaseDetector):
         global_std = float(np.std(gray))
         center_std = float(np.std(center))
         score = center_std / max(global_std, 1e-6)
+        context.shared_features["overwrite_std_ratio"] = score
+
         confidence = _safe_confidence(0.32 + score / 1.7)
         if confidence < 0.57:
             return []
@@ -183,6 +187,8 @@ class AddedContentDetector(BaseDetector):
                     best_xy = (x, y)
 
         ratio = best_var / max(global_var, 1e-6)
+        context.shared_features["added_content_var_ratio"] = ratio
+
         confidence = _safe_confidence(0.40 + ratio / 2.4)
         if confidence < 0.56:
             return []
@@ -228,6 +234,8 @@ class ErasureDetector(BaseDetector):
                     best_xy = (x, y)
 
         smoothness_gain = 1.0 - (min_var / max(global_var, 1e-6))
+        context.shared_features["erasure_smoothness_gain"] = smoothness_gain
+
         confidence = _safe_confidence(0.30 + smoothness_gain * 0.78)
         if confidence < 0.56:
             return []
@@ -262,6 +270,7 @@ class DocumentMergeDetector(BaseDetector):
         left_mean = float(np.mean(left_band))
         right_mean = float(np.mean(right_band))
         contrast_delta = abs(left_mean - right_mean)
+        context.shared_features["merged_contrast_delta"] = contrast_delta
 
         confidence = _safe_confidence(0.30 + contrast_delta / 75.0)
         if confidence < 0.55:
@@ -298,6 +307,7 @@ class WatermarkRemovalDetector(BaseDetector):
         col_peak = float(np.max(col_energy))
         baseline = float(np.median(row_energy) + np.median(col_energy)) / 2.0
         peak_ratio = max(row_peak, col_peak) / max(baseline, 1e-6)
+        context.shared_features["watermark_peak_ratio"] = peak_ratio
 
         confidence = _safe_confidence(0.26 + peak_ratio / 6.2)
         if confidence < 0.56:
@@ -341,6 +351,7 @@ class SpacingIrregularityDetector(BaseDetector):
         q3 = float(np.quantile(row_diff, 0.75))
         iqr = max(1e-6, q3 - q1)
         outlier_score = float(np.max(row_diff) - q3) / iqr
+        context.shared_features["spacing_outlier_score"] = outlier_score
 
         confidence = _safe_confidence(0.33 + outlier_score / 5.5)
         if confidence < 0.55:
@@ -388,6 +399,7 @@ class AIGeneratedDetector(BaseDetector):
         core_mean = float(np.mean(core)) if core.size else 0.0
         periphery_mean = float(np.mean(periphery)) if periphery.size else 1.0
         ratio = core_mean / max(periphery_mean, 1e-5)
+        context.shared_features["ai_generated_ratio"] = ratio
 
         confidence = _safe_confidence(0.40 + ratio / 6.5)
         if confidence < 0.55:
@@ -422,6 +434,7 @@ class PartialAIEditDetector(BaseDetector):
         dominant_var, quadrant_idx = _quadrant_variance(gray)
         global_var = float(np.var(gray))
         score = dominant_var / max(global_var, 1e-6)
+        context.shared_features["ai_edit_local_var_ratio"] = score
 
         confidence = _safe_confidence(0.38 + score / 2.8)
         if confidence < 0.54:

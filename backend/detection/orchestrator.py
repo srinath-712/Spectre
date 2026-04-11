@@ -24,12 +24,14 @@ class DetectorFailure:
 class DetectorRunResult:
     findings: list[Finding]
     failures: list[DetectorFailure]
+    features: dict[str, float]
 
 
-def _run_detector(detector_name: str, image: np.ndarray, domain: str) -> list[Finding]:
+def _run_detector(detector_name: str, image: np.ndarray, domain: str) -> tuple[list[Finding], dict[str, float]]:
     detector = create_detector(detector_name)
     context = DetectorContext(image=image, domain=domain)
-    return detector.detect(context)
+    findings = detector.detect(context)
+    return findings, context.shared_features
 
 
 def run_detectors(
@@ -40,9 +42,10 @@ def run_detectors(
     names = selected_detectors or detector_names()
     findings: list[Finding] = []
     failures: list[DetectorFailure] = []
+    features_agg: dict[str, float] = {}
 
     if not names:
-        return DetectorRunResult(findings=[], failures=[])
+        return DetectorRunResult(findings=[], failures=[], features={})
 
     engine = settings.detector_execution_engine.lower()
     if engine == "process":
@@ -50,7 +53,7 @@ def run_detectors(
     else:
         executor_cls = ThreadPoolExecutor
 
-    future_map: dict[Future[list[Finding]], str] = {}
+    future_map: dict[Future[tuple[list[Finding], dict[str, float]]], str] = {}
     max_workers = max(1, min(settings.detector_max_workers, len(names)))
 
     with executor_cls(max_workers=max_workers) as executor:
@@ -60,8 +63,9 @@ def run_detectors(
 
         for future, name in future_map.items():
             try:
-                detector_findings = future.result(timeout=settings.detector_timeout_seconds)
+                detector_findings, detector_features = future.result(timeout=settings.detector_timeout_seconds)
                 findings.extend(detector_findings)
+                features_agg.update(detector_features)
             except TimeoutError:
                 failures.append(
                     DetectorFailure(
@@ -79,4 +83,4 @@ def run_detectors(
             [f"{item.detector}:{item.reason}" for item in failures],
         )
 
-    return DetectorRunResult(findings=findings, failures=failures)
+    return DetectorRunResult(findings=findings, failures=failures, features=features_agg)

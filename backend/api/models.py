@@ -39,6 +39,7 @@ class Finding(BaseModel):
     signals: list[str]
     severity: Severity
     description: str
+    features: dict[str, float] = Field(default_factory=dict)
 
 
 class TimelineStep(BaseModel):
