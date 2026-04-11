@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import cv2
 import numpy as np
+from skimage.metrics import structural_similarity
 
 from api.models import BoundingBox, Finding
 from detection.base import BaseDetector, DetectorContext
@@ -10,6 +12,11 @@ def _to_gray(image: np.ndarray) -> np.ndarray:
     if image.ndim == 2:
         return image.astype(np.float32)
     return np.mean(image.astype(np.float32), axis=2)
+
+
+def _to_gray_uint8(image: np.ndarray) -> np.ndarray:
+    gray = _to_gray(image)
+    return np.clip(gray, 0, 255).astype(np.uint8)
 
 
 def _safe_confidence(value: float) -> float:
@@ -65,11 +72,194 @@ def _high_variance_region(image: np.ndarray) -> tuple[int, int, int, int]:
     return x, y, bw, bh
 
 
+# -------------------------------------------------------------------
+# JPEG-Resistant feature helpers (CHANGE 1)
+# -------------------------------------------------------------------
+
+def _dct_block_hash_matches(gray_u8: np.ndarray) -> float:
+    """Matching DCT block fingerprints between TL and BR quadrants."""
+    h, w = gray_u8.shape
+    mid_h, mid_w = h // 2, w // 2
+
+    def _hashes(region: np.ndarray) -> set:
+        rh, rw = region.shape
+        s = set()
+        for by in range(0, rh - 7, 16):
+            for bx in range(0, rw - 7, 16):
+                block = region[by:by + 8, bx:bx + 8].astype(np.float32)
+                dct = cv2.dct(block)
+                low = dct[:2, :2].ravel()
+                mx = float(np.max(np.abs(low))) + 1e-10
+                q = tuple(np.clip(np.floor((low / mx + 1) * 2), 0, 3).astype(int))
+                s.add(q)
+        return s
+
+    h_tl = _hashes(gray_u8[:mid_h, :mid_w])
+    h_br = _hashes(gray_u8[mid_h:, mid_w:])
+    return len(h_tl & h_br) / max(len(h_tl), 1)
+
+
+def _patch_self_similarity(gray_f32: np.ndarray) -> float:
+    """Max SSIM between TL quadrant and the other 3."""
+    h, w = gray_f32.shape
+    step = max(1, min(h, w) // 200)
+    small = gray_f32[::step, ::step]
+    sh, sw = small.shape
+    mh, mw = sh // 2, sw // 2
+    tl = small[:mh, :mw]
+    others = [small[:mh, mw:mw + mw], small[mh:mh + mh, :mw], small[mh:mh + mh, mw:mw + mw]]
+    best = 0.0
+    for q in others:
+        qh, qw = min(tl.shape[0], q.shape[0]), min(tl.shape[1], q.shape[1])
+        if qh > 7 and qw > 7:
+            s = structural_similarity(tl[:qh, :qw], q[:qh, :qw], data_range=255.0)
+            best = max(best, s)
+    return best
+
+
+def _blocking_artifact_consistency(
+    gray_f32: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """Gradient variance at 8-px block boundaries inside vs outside region."""
+    gx = np.abs(np.diff(gray_f32, axis=1))
+    h, w = gx.shape
+    bcols = np.arange(7, w, 8)
+    if len(bcols) == 0:
+        return 0.0
+    col_grads = gx[:, bcols]
+    row_mask = np.zeros(h, dtype=bool)
+    row_mask[ry:min(ry + rh, h)] = True
+    col_mask = (bcols >= rx) & (bcols < rx + rw)
+    inside_mask = row_mask[:, None] & col_mask[None, :]
+    inside = col_grads[inside_mask]
+    outside = col_grads[~inside_mask]
+    if inside.size < 2 or outside.size < 2:
+        return 0.0
+    return float(np.var(inside)) / max(float(np.var(outside)), 1e-6)
+
+
+# -------------------------------------------------------------------
+# Edge-based feature helpers (CHANGE 2)
+# -------------------------------------------------------------------
+
+def _edge_density_ratio(
+    gray_u8: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """Canny edge density inside region / margin around it."""
+    edges = cv2.Canny(gray_u8, 50, 150)
+    region = edges[ry:ry + rh, rx:rx + rw]
+    in_density = float(np.sum(region > 0)) / max(region.size, 1)
+    margin = max(rw, rh) // 2
+    y1, y2 = max(0, ry - margin), min(edges.shape[0], ry + rh + margin)
+    x1, x2 = max(0, rx - margin), min(edges.shape[1], rx + rw + margin)
+    outer = edges[y1:y2, x1:x2].copy()
+    iy, ix = ry - y1, rx - x1
+    outer[iy:iy + rh, ix:ix + rw] = 0
+    margin_px = outer.size - rw * rh
+    out_density = float(np.sum(outer > 0)) / max(margin_px, 1)
+    return in_density / max(out_density, 1e-6)
+
+
+def _local_frequency_anomaly(
+    gray_f32: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """FFT energy of region / median of 5 random same-size patches."""
+    region = gray_f32[ry:ry + rh, rx:rx + rw]
+    region_e = float(np.mean(np.abs(np.fft.fft2(region)) ** 2))
+    h, w = gray_f32.shape
+    rng = np.random.RandomState(42)
+    energies = []
+    for _ in range(5):
+        sy = rng.randint(0, max(1, h - rh))
+        sx = rng.randint(0, max(1, w - rw))
+        p = gray_f32[sy:sy + rh, sx:sx + rw]
+        if p.shape == region.shape:
+            energies.append(float(np.mean(np.abs(np.fft.fft2(p)) ** 2)))
+    med = float(np.median(energies)) if energies else 1.0
+    return region_e / max(med, 1e-6)
+
+
+def _ink_coverage_ratio(
+    gray_u8: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """Dark pixel (<180) % in region / same for whole doc."""
+    region = gray_u8[ry:ry + rh, rx:rx + rw]
+    r_ink = float(np.sum(region < 180)) / max(region.size, 1)
+    d_ink = float(np.sum(gray_u8 < 180)) / max(gray_u8.size, 1)
+    return r_ink / max(d_ink, 1e-6)
+
+
+# -------------------------------------------------------------------
+# Noise-based feature helpers (CHANGE 3)
+# -------------------------------------------------------------------
+
+def _noise_fingerprint_mismatch(
+    gray_u8: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """NL-means denoising residual in target vs 4 surrounding regions."""
+    small = cv2.resize(gray_u8, None, fx=0.5, fy=0.5)
+    denoised = cv2.fastNlMeansDenoising(small, None, h=10,
+                                         templateWindowSize=5, searchWindowSize=11)
+    residual = cv2.resize(
+        np.abs(small.astype(np.float32) - denoised.astype(np.float32)),
+        (gray_u8.shape[1], gray_u8.shape[0]),
+    )
+    target = float(np.mean(residual[ry:ry + rh, rx:rx + rw]))
+    h, w = gray_u8.shape
+    surr = []
+    for dy, dx in [(-rh, 0), (rh, 0), (0, -rw), (0, rw)]:
+        sy, sx = ry + dy, rx + dx
+        if 0 <= sy and sy + rh <= h and 0 <= sx and sx + rw <= w:
+            surr.append(float(np.mean(residual[sy:sy + rh, sx:sx + rw])))
+    return abs(target - (float(np.mean(surr)) if surr else target))
+
+
+def _ela_local_vs_neighbor(
+    gray_u8: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """ELA at JPEG-75: target region mean / mean of 8 surrounding patches."""
+    _, enc = cv2.imencode('.jpg', gray_u8, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
+    dec = cv2.imdecode(enc, cv2.IMREAD_GRAYSCALE)
+    ela = np.abs(gray_u8.astype(np.float32) - dec.astype(np.float32))
+    target = float(np.mean(ela[ry:ry + rh, rx:rx + rw]))
+    h, w = gray_u8.shape
+    surr = []
+    for dy in [-rh, 0, rh]:
+        for dx in [-rw, 0, rw]:
+            if dy == 0 and dx == 0:
+                continue
+            sy, sx = ry + dy, rx + dx
+            if 0 <= sy and sy + rh <= h and 0 <= sx and sx + rw <= w:
+                surr.append(float(np.mean(ela[sy:sy + rh, sx:sx + rw])))
+    s_mean = float(np.mean(surr)) if surr else 1.0
+    return float(np.clip(target / max(s_mean, 1e-6), 0, 10))
+
+
+def _compression_artifact_density(
+    gray_u8: np.ndarray, rx: int, ry: int, rw: int, rh: int,
+) -> float:
+    """Strong horizontal gradients at DCT block boundaries in region."""
+    region = gray_u8[ry:ry + rh, rx:rx + rw].astype(np.float32)
+    if region.shape[1] < 16:
+        return 0.0
+    gx = np.abs(np.diff(region, axis=1))
+    bcols = np.arange(7, gx.shape[1], 8)
+    if len(bcols) == 0:
+        return 0.0
+    return float(np.sum(gx[:, bcols] > 20)) / max(rw, 1)
+
+
+# ===================================================================
+# Detectors
+# ===================================================================
+
+
 class CopyPasteDetector(BaseDetector):
     name = "copy_paste"
 
     def detect(self, context: DetectorContext) -> list[Finding]:
         gray = _to_gray(context.image)
+        gray_u8 = _to_gray_uint8(context.image)
         h, w = gray.shape
         patch_h = max(24, h // 12)
         patch_w = max(24, w // 12)
@@ -103,18 +293,22 @@ class CopyPasteDetector(BaseDetector):
                     best_xy = (x2, y2)
 
         corr = best_corr
-        context.shared_features["copy_paste_max_corr"] = corr
-        
+        bx, by = best_xy
+        bw, bh = patch_w, patch_h
+
+        # CHANGE 1: JPEG-resistant features
+        context.shared_features["dct_block_hash_matches"] = _dct_block_hash_matches(gray_u8)
+        context.shared_features["patch_self_similarity"] = _patch_self_similarity(gray)
+        context.shared_features["blocking_artifact_consistency"] = _blocking_artifact_consistency(gray, bx, by, bw, bh)
+
         confidence = _safe_confidence(0.38 + max(0.0, corr) * 0.58)
         if confidence < 0.56:
             return []
 
-        x, y = best_xy
-        bw, bh = patch_w, patch_h
         return [
             Finding(
                 region_id="cp_001",
-                bbox=BoundingBox(x=x, y=y, w=bw, h=bh),
+                bbox=BoundingBox(x=bx, y=by, w=bw, h=bh),
                 type="copy_paste",
                 confidence=confidence,
                 signals=[
@@ -168,6 +362,7 @@ class AddedContentDetector(BaseDetector):
 
     def detect(self, context: DetectorContext) -> list[Finding]:
         gray = _to_gray(context.image)
+        gray_u8 = _to_gray_uint8(context.image)
 
         h, w = gray.shape
         win_h = max(24, h // 8)
@@ -187,13 +382,17 @@ class AddedContentDetector(BaseDetector):
                     best_xy = (x, y)
 
         ratio = best_var / max(global_var, 1e-6)
-        context.shared_features["added_content_var_ratio"] = ratio
+        bx, by = best_xy
+
+        # CHANGE 2: Edge-based features
+        context.shared_features["edge_density_ratio"] = _edge_density_ratio(gray_u8, bx, by, win_w, win_h)
+        context.shared_features["local_frequency_anomaly"] = _local_frequency_anomaly(gray, bx, by, win_w, win_h)
+        context.shared_features["ink_coverage_ratio"] = _ink_coverage_ratio(gray_u8, bx, by, win_w, win_h)
 
         confidence = _safe_confidence(0.40 + ratio / 2.4)
         if confidence < 0.56:
             return []
 
-        bx, by = best_xy
         bbox = BoundingBox(x=bx, y=by, w=win_w, h=win_h)
         return [
             Finding(
@@ -300,7 +499,6 @@ class WatermarkRemovalDetector(BaseDetector):
         gray = _to_gray(context.image)
         spectrum = np.abs(np.fft.fft2(gray))
 
-        # Track narrow high-energy lines often left after watermark removal attempts.
         row_energy = np.mean(spectrum, axis=1)
         col_energy = np.mean(spectrum, axis=0)
         row_peak = float(np.max(row_energy))
@@ -337,7 +535,6 @@ class SpacingIrregularityDetector(BaseDetector):
 
     def detect(self, context: DetectorContext) -> list[Finding]:
         if OCR_AVAILABLE:
-            # Placeholder for OCR-based high-fidelity text structure analysis
             pass
 
         gray = _to_gray(context.image)
@@ -379,7 +576,6 @@ class AIGeneratedDetector(BaseDetector):
 
     def detect(self, context: DetectorContext) -> list[Finding]:
         if OCR_AVAILABLE:
-            # Placeholder for OCR-based high-fidelity text structure analysis
             pass
 
         gray = _to_gray(context.image)
@@ -427,18 +623,13 @@ class PartialAIEditDetector(BaseDetector):
 
     def detect(self, context: DetectorContext) -> list[Finding]:
         if OCR_AVAILABLE:
-            # Placeholder for OCR-based semantic anomaly detection
             pass
 
         gray = _to_gray(context.image)
+        gray_u8 = _to_gray_uint8(context.image)
         dominant_var, quadrant_idx = _quadrant_variance(gray)
         global_var = float(np.var(gray))
         score = dominant_var / max(global_var, 1e-6)
-        context.shared_features["ai_edit_local_var_ratio"] = score
-
-        confidence = _safe_confidence(0.38 + score / 2.8)
-        if confidence < 0.54:
-            return []
 
         quadrant_boxes = {
             0: (0.10, 0.10),
@@ -447,6 +638,23 @@ class PartialAIEditDetector(BaseDetector):
             3: (0.58, 0.56),
         }
         x_frac, y_frac = quadrant_boxes.get(quadrant_idx, (0.58, 0.56))
+        img_h, img_w = gray.shape
+        rx = max(0, min(int(img_w * x_frac), img_w - 24))
+        ry = max(0, min(int(img_h * y_frac), img_h - 20))
+        rw = max(24, int(img_w * 0.28))
+        rh = max(20, int(img_h * 0.18))
+        rw = min(rw, img_w - rx)
+        rh = min(rh, img_h - ry)
+
+        # CHANGE 3: Noise-based features
+        context.shared_features["noise_fingerprint_mismatch"] = _noise_fingerprint_mismatch(gray_u8, rx, ry, rw, rh)
+        context.shared_features["ela_local_vs_neighbor"] = _ela_local_vs_neighbor(gray_u8, rx, ry, rw, rh)
+        context.shared_features["compression_artifact_density"] = _compression_artifact_density(gray_u8, rx, ry, rw, rh)
+
+        confidence = _safe_confidence(0.38 + score / 2.8)
+        if confidence < 0.54:
+            return []
+
         bbox = _bbox_from_fraction(context.image, x_frac, y_frac, 0.28, 0.18)
 
         return [

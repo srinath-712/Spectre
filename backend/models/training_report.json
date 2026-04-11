@@ -1,0 +1,197 @@
+{
+  "validation_metrics": [
+    {
+      "class": "added_content",
+      "f1": 0.2556,
+      "precision": 0.219,
+      "recall": 0.3067,
+      "val_positives": 75,
+      "val_total": 525,
+      "train_positives": 350,
+      "train_total": 2450
+    },
+    {
+      "class": "ai_generated",
+      "f1": 0.3778,
+      "precision": 0.3238,
+      "recall": 0.4533,
+      "val_positives": 75,
+      "val_total": 525,
+      "train_positives": 350,
+      "train_total": 2450
+    },
+    {
+      "class": "ai_edit",
+      "f1": 0.3445,
+      "precision": 0.2687,
+      "recall": 0.48,
+      "val_positives": 75,
+      "val_total": 525,
+      "train_positives": 350,
+      "train_total": 2450
+    },
+    {
+      "class": "copy_paste",
+      "f1": 0.1905,
+      "precision": 0.1481,
+      "recall": 0.2667,
+      "val_positives": 45,
+      "val_total": 525,
+      "train_positives": 210,
+      "train_total": 2450
+    },
+    {
+      "class": "overwrite",
+      "f1": 0.4242,
+      "precision": 0.6667,
+      "recall": 0.3111,
+      "val_positives": 45,
+      "val_total": 525,
+      "train_positives": 210,
+      "train_total": 2450
+    },
+    {
+      "class": "spacing",
+      "f1": 0.137,
+      "precision": 0.1786,
+      "recall": 0.1111,
+      "val_positives": 45,
+      "val_total": 525,
+      "train_positives": 210,
+      "train_total": 2450
+    },
+    {
+      "class": "erasure",
+      "f1": 0.1429,
+      "precision": 0.125,
+      "recall": 0.1667,
+      "val_positives": 30,
+      "val_total": 525,
+      "train_positives": 140,
+      "train_total": 2450
+    },
+    {
+      "class": "merged",
+      "f1": 0.6222,
+      "precision": 0.9333,
+      "recall": 0.4667,
+      "val_positives": 30,
+      "val_total": 525,
+      "train_positives": 140,
+      "train_total": 2450
+    },
+    {
+      "class": "watermark",
+      "f1": 0.1333,
+      "precision": 0.1111,
+      "recall": 0.1667,
+      "val_positives": 30,
+      "val_total": 525,
+      "train_positives": 140,
+      "train_total": 2450
+    }
+  ],
+  "test_metrics": [
+    {
+      "class": "added_content",
+      "f1": 0.2971,
+      "precision": 0.26,
+      "recall": 0.3467,
+      "test_positives": 75,
+      "test_total": 525
+    },
+    {
+      "class": "ai_edit",
+      "f1": 0.3842,
+      "precision": 0.3047,
+      "recall": 0.52,
+      "test_positives": 75,
+      "test_total": 525
+    },
+    {
+      "class": "ai_generated",
+      "f1": 0.1818,
+      "precision": 0.1518,
+      "recall": 0.2267,
+      "test_positives": 75,
+      "test_total": 525
+    },
+    {
+      "class": "copy_paste",
+      "f1": 0.1061,
+      "precision": 0.0805,
+      "recall": 0.1556,
+      "test_positives": 45,
+      "test_total": 525
+    },
+    {
+      "class": "erasure",
+      "f1": 0.0789,
+      "precision": 0.0652,
+      "recall": 0.1,
+      "test_positives": 30,
+      "test_total": 525
+    },
+    {
+      "class": "merged",
+      "f1": 0.5,
+      "precision": 1.0,
+      "recall": 0.3333,
+      "test_positives": 30,
+      "test_total": 525
+    },
+    {
+      "class": "overwrite",
+      "f1": 0.4444,
+      "precision": 0.7778,
+      "recall": 0.3111,
+      "test_positives": 45,
+      "test_total": 525
+    },
+    {
+      "class": "spacing",
+      "f1": 0.0811,
+      "precision": 0.1034,
+      "recall": 0.0667,
+      "test_positives": 45,
+      "test_total": 525
+    },
+    {
+      "class": "watermark",
+      "f1": 0.0952,
+      "precision": 0.0741,
+      "recall": 0.1333,
+      "test_positives": 30,
+      "test_total": 525
+    }
+  ],
+  "model_dir": "C:\\Users\\Srinath\\PROJECT\\Spectre\\backend\\models",
+  "feature_columns": [
+    "copy_paste_max_corr",
+    "overwrite_std_ratio",
+    "added_content_var_ratio",
+    "erasure_smoothness_gain",
+    "merged_contrast_delta",
+    "watermark_peak_ratio",
+    "spacing_outlier_score",
+    "ai_generated_ratio",
+    "ai_edit_local_var_ratio"
+  ],
+  "tranches": {
+    "4A": [
+      "added_content",
+      "ai_generated",
+      "ai_edit"
+    ],
+    "4B": [
+      "copy_paste",
+      "overwrite",
+      "spacing"
+    ],
+    "4C": [
+      "erasure",
+      "merged",
+      "watermark"
+    ]
+  }
+}
