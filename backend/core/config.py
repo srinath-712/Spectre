@@ -39,6 +39,9 @@ class Settings:
     allowed_origins: list[str] = field(
         default_factory=lambda: _parse_list("SPECTRE_ALLOWED_ORIGINS", ["*"])
     )
+    heuristic_only: bool = getenv("SPECTRE_HEURISTIC_ONLY", "false").lower() == "true"
+    ocr_force_fallback: bool = getenv("SPECTRE_OCR_FORCE_FALLBACK", "false").lower() == "true"
+    ml_model_dir: Path = Path(getenv("SPECTRE_MODEL_DIR", "backend/models"))
 
     @property
     def max_upload_bytes(self) -> int:

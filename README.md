@@ -11,6 +11,7 @@
 - [Key Features](#-key-features)
 - [Getting Started](#-getting-started)
 - [Demo Runbook](#-demo-runbook)
+- [Freeze Checklist](#-freeze-checklist)
 - [Roadmap](#-roadmap)
 
 ---
@@ -92,6 +93,11 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 Judge-mode demo and fallback operation steps are documented in:
 
 - `docs/PHASE5C_RUNBOOK.md`
+
+## 🧊 Freeze Checklist
+Release-candidate freeze and public URL validation steps are documented in:
+
+- `docs/PHASE5D_FREEZE.md`
 
 ---
 

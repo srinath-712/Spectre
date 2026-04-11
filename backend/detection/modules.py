@@ -320,10 +320,16 @@ class WatermarkRemovalDetector(BaseDetector):
         ]
 
 
+from core.ocr_check import OCR_AVAILABLE
+
 class SpacingIrregularityDetector(BaseDetector):
     name = "spacing"
 
     def detect(self, context: DetectorContext) -> list[Finding]:
+        if OCR_AVAILABLE:
+            # Placeholder for OCR-based high-fidelity text structure analysis
+            pass
+
         gray = _to_gray(context.image)
 
         row_profile = np.mean(gray, axis=1)
@@ -348,7 +354,7 @@ class SpacingIrregularityDetector(BaseDetector):
                 type="spacing",
                 confidence=confidence,
                 signals=[
-                    f"Projection-profile outlier score {outlier_score:.2f}",
+                    f"Projection-profile outlier score {outlier_score:.2f} (Fallback Mode)",
                     "Baseline rhythm irregularity",
                 ],
                 severity=_severity_from_confidence(confidence),
@@ -361,6 +367,10 @@ class AIGeneratedDetector(BaseDetector):
     name = "ai_generated"
 
     def detect(self, context: DetectorContext) -> list[Finding]:
+        if OCR_AVAILABLE:
+            # Placeholder for OCR-based high-fidelity text structure analysis
+            pass
+
         gray = _to_gray(context.image)
         spectrum = np.fft.fftshift(np.abs(np.fft.fft2(gray)))
         h, w = spectrum.shape
@@ -391,7 +401,7 @@ class AIGeneratedDetector(BaseDetector):
                 type="ai_generated",
                 confidence=confidence,
                 signals=[
-                    f"FFT center/periphery ratio {ratio:.2f}",
+                    f"FFT center/periphery ratio {ratio:.2f} (Fallback Mode)",
                     "Texture regularity exceeds scanned baseline",
                 ],
                 severity=_severity_from_confidence(confidence),
@@ -404,6 +414,10 @@ class PartialAIEditDetector(BaseDetector):
     name = "ai_edit"
 
     def detect(self, context: DetectorContext) -> list[Finding]:
+        if OCR_AVAILABLE:
+            # Placeholder for OCR-based semantic anomaly detection
+            pass
+
         gray = _to_gray(context.image)
         dominant_var, quadrant_idx = _quadrant_variance(gray)
         global_var = float(np.var(gray))
@@ -429,7 +443,7 @@ class PartialAIEditDetector(BaseDetector):
                 type="ai_edit",
                 confidence=confidence,
                 signals=[
-                    f"Local/global variance ratio {score:.2f}",
+                    f"Local/global variance ratio {score:.2f} (Fallback Mode)",
                     "Asymmetric retouch footprint",
                 ],
                 severity=_severity_from_confidence(confidence),
